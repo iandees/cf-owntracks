@@ -17,8 +17,8 @@ import { cors } from 'hono/cors';
 
 interface Env {
 	STORAGE: R2Bucket;
-	BASIC_AUTH_USER: string;    // 添加用户名环境变量
-	BASIC_AUTH_PASS: string;    // 添加密码环境变量
+	BASIC_AUTH_USER: string;    // Username environment variable
+	BASIC_AUTH_PASS: string;    // Password environment variable
 	LAST_LOCATIONS: KVNamespace;
 }
 
@@ -47,12 +47,12 @@ app.post('/', async (c) => {
 			return c.json([]);
 		}
 
-		// 验证基本字段
+		// Validate basic fields
 		if (payload._type !== 'location' || !payload.lat || !payload.lon) {
 			return c.json({ error: 'Invalid location payload' }, 400);
 		}
 
-		// 验证并解析 topic
+		// Validate and parse topic
 		if (!payload.topic) {
 			return c.json({ error: 'Missing topic' }, 400);
 		}
@@ -66,9 +66,9 @@ app.post('/', async (c) => {
 
 		await updateLastLocations(c.env, username, device, payload);
 
-		// 生成存储路径
+		// Generate storage path
 		const now = new Date();
-		// 如果 payload 包含 tst (Unix timestamp)，使用它作为时间戳
+		// If payload contains tst (Unix timestamp), use it as the timestamp
 		const timestamp = payload.tst
 			? new Date(payload.tst * 1000).toISOString()
 			: now.toISOString();
@@ -77,28 +77,28 @@ app.post('/', async (c) => {
 		const storagePath = `rec/${username}/${device}/${month}.rec`;
 		console.log(storagePath);
 
-		// 格式化记录行
+		// Format record line
 		const newRecord = `${timestamp} * ${JSON.stringify(payload)}\n`;
 
-		// 读取现有内容或创建新文件
+		// Read existing content or create new file
 		let content = '';
 		const existingFile = await c.env.STORAGE.get(storagePath);
 		if (existingFile) {
 			content = await existingFile.text();
 		}
 
-		// 追加新记录
+		// Append new record
 		content += newRecord;
 		console.log(content);
 
-		// 存储更新后的内容
+		// Store updated content
 		await c.env.STORAGE.put(storagePath, content, {
 			httpMetadata: {
 				contentType: 'text/plain',
 			}
 		});
 
-		// 按照 Owntracks 规范返回空数组
+		// Return empty array according to Owntracks specification
 		return c.json([]);
 
 	} catch (error) {
@@ -114,16 +114,16 @@ app.get('/api/0/locations', async (c) => {
 		const from = c.req.query('from');
 		const to = c.req.query('to');
 
-		// 验证必需参数
+		// Validate required parameters
 		if (!user || !device) {
 			return c.json({ error: 'User and device parameters are required' }, 400);
 		}
 
-		// 解析时间范围
-		const fromDate = from ? new Date(from) : new Date(0); // 如果没有 from，使用最早时间
-		const toDate = to ? new Date(to) : new Date(); // 如果没有 to，使用当前时间
+		// Parse time range
+		const fromDate = from ? new Date(from) : new Date(0); // If no from, use earliest time
+		const toDate = to ? new Date(to) : new Date(); // If no to, use current time
 
-		// 获取需要读取的月份列表
+		// Get list of months to read
 		const months: string[] = [];
 		const currentMonth = new Date(fromDate);
 		while (currentMonth <= toDate) {
@@ -131,10 +131,10 @@ app.get('/api/0/locations', async (c) => {
 			currentMonth.setMonth(currentMonth.getMonth() + 1);
 		}
 
-		// 存储所有位置数据
+		// Store all location data
 		let locations: any[] = [];
 
-		// 只读取需要的月份文件
+		// Only read required month files
 		for (const month of months) {
 			const filePath = `rec/${user}/${device}/${month}.rec`;
 			const file = await c.env.STORAGE.get(filePath);
@@ -149,7 +149,7 @@ app.get('/api/0/locations', async (c) => {
 
 				const recordDate = new Date(timestamp);
 
-				// 时间过滤
+				// Time filtering
 				if (recordDate < fromDate || recordDate > toDate) continue;
 
 				try {
@@ -178,29 +178,29 @@ app.get('/api/0/list', async (c) => {
 			const prefix = `rec/${user}/${device}/`;
 			const objects = await c.env.STORAGE.list({ prefix });
 			const recFiles = objects.objects
-				.map(obj => obj.key.split('/').pop()) // 只返回文件名
+				.map(obj => obj.key.split('/').pop()) // Only return file names
 				.filter(name => name?.endsWith('.rec'));
 			return c.json(recFiles);
 		}
 
-		// 列出指定用户的所有设备
+		// List all devices for specified user
 		if (user) {
 			const prefix = `rec/${user}/`;
 			const objects = await c.env.STORAGE.list({ prefix });
 			const devices = new Set(
 				objects.objects
-					.map(obj => obj.key.split('/')[2]) // 获取设备名称
+					.map(obj => obj.key.split('/')[2]) // Get device name
 					.filter(Boolean)
 			);
 			return c.json({ results: Array.from(devices) });
 		}
 
-		// 列出所有用户
+		// List all users
 		const prefix = 'rec/';
 		const objects = await c.env.STORAGE.list({ prefix });
 		const users = new Set(
 			objects.objects
-				.map(obj => obj.key.split('/')[1]) // 获取用户名称
+				.map(obj => obj.key.split('/')[1]) // Get user name
 				.filter(Boolean)
 		);
 		return c.json({ results: Array.from(users) });
@@ -246,17 +246,17 @@ app.get('/api/0/last', async (c) => {
 
 async function updateLastLocations(env: Env, username: string, device: string, lastLocation: any) {
 	try {
-		// 1. 更新特定用户和设备的最新位置
+		// 1. Update the latest location for the specific user and device
 		const userDeviceKey = `last:${username}:${device}`;
 		await env.LAST_LOCATIONS.put(userDeviceKey, JSON.stringify([lastLocation]));
 
-		// 2. 更新用户的所有设备最新位置列表
+		// 2. Update the latest location list for all devices of the user
 		const userKey = `last:${username}`;
 		const existingUserData = await env.LAST_LOCATIONS.get(userKey);
 		let userDevices = [];
 		if (existingUserData) {
 			userDevices = JSON.parse(existingUserData);
-			// 从 topic 解析设备信息进行过滤
+			// Filter by parsing device information from topic
 			userDevices = userDevices.filter(loc => {
 				const [_, __, deviceId] = loc.topic.split('/');
 				return deviceId !== device;
@@ -265,13 +265,13 @@ async function updateLastLocations(env: Env, username: string, device: string, l
 		userDevices.push(lastLocation);
 		await env.LAST_LOCATIONS.put(userKey, JSON.stringify(userDevices));
 
-		// 3. 更新全局最新位置
+		// 3. Update the global latest location
 		const globalKey = 'last:all';
 		const existingGlobalData = await env.LAST_LOCATIONS.get(globalKey);
 		let allLocations = [];
 		if (existingGlobalData) {
 			allLocations = JSON.parse(existingGlobalData);
-			// 从 topic 解析用户和设备信息进行过滤
+			// Filter by parsing user and device information from topic
 			allLocations = allLocations.filter(loc => {
 				const [_, userId, deviceId] = loc.topic.split('/');
 				return !(userId === username && deviceId === device);
@@ -281,7 +281,7 @@ async function updateLastLocations(env: Env, username: string, device: string, l
 		await env.LAST_LOCATIONS.put(globalKey, JSON.stringify(allLocations));
 	} catch (error) {
 		console.error('Error updating last locations:', error);
-		throw error; // 向上传播错误以便主函数处理
+		throw error; // Propagate error to be handled by the main function
 	}
 }
 

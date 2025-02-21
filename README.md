@@ -1,43 +1,42 @@
 # cf-owntracks
 
-cf-owntracks 是一个基于 Cloudflare Workers 的位置追踪服务器实现，受 [OwnTracks](https://owntracks.org/) 项目启发。相比原始的 OwnTracks 需要自建服务器，本项目利用 Cloudflare Workers 的优势，提供了一个低成本、易部署，数据高可用且高性能的替代方案。
+cf-owntracks is a location tracking server implementation based on Cloudflare Workers, inspired by the [OwnTracks](https://owntracks.org/) project. Compared to the original OwnTracks which requires self-hosting a server, this project leverages the advantages of Cloudflare Workers to provide a low-cost, easy-to-deploy, highly available, and high-performance alternative.
 
-## 特性
+## Features
 
-- 🚀 基于 Cloudflare Workers，无需自建服务器
-- 💾 使用 R2 存储位置数据，成本低廉
-- 🔒 内置基本认证（Basic Auth）保护
-- ⚡ 全球边缘网络分发，低延迟
-- 📱 完全兼容 OwnTracks 客户端
-- 🔍 支持历史位置查询
-- 📍 支持实时位置更新
+- 🚀 Based on Cloudflare Workers, no need to self-host a server
+- 💾 Uses R2 to store location data, low cost
+- 🔒 Built-in Basic Auth protection
+- ⚡ Distributed via global edge network, low latency
+- 📱 Fully compatible with OwnTracks client
+- 🔍 Supports historical location queries
+- 📍 Supports real-time location updates
 
-## 快速开始
+## Quick Start
 
-### 前置要求
+### Prerequisites
 
-- Cloudflare 账号
+- Cloudflare account
 - Node.js 16+
-- npm 或 yarn
+- npm or yarn
 - wrangler CLI
 
-### 安装
+### Installation
 
-1. 克隆仓库： 
+1. Clone the repository:
 
 ```bash
-bash
 git clone https://github.com/yourusername/cf-owntracks.git
 cd cf-owntracks
 ```
 
-2. 安装依赖：
+2. Install dependencies:
 
 ```bash
 npm install
 ```
 
-3. 配置 wrangler.toml:
+3. Configure `wrangler.toml`:
 
 ```toml
 name = "owntracker-worker"
@@ -56,44 +55,44 @@ BASIC_AUTH_USER = "your-username"
 BASIC_AUTH_PASS = "your-password"
 ```
 
-4. 部署：
+4. Deploy:
 
 ```bash
 npm run deploy
 ```
 
-## API 端点
+## API Endpoints
 
-### 位置上报
+### Location Reporting
 - `POST /`
-  - 接收 OwnTracks 客户端的位置更新
+	- Receives location updates from OwnTracks client
 
-### 查询接口
-- `GET /api/0/locations` - 查询历史位置
-- `GET /api/0/last` - 获取最新位置
-- `GET /api/0/list` - 列出用户和设备
-- `GET /api/0/version` - 获取版本信息
+### Query Endpoints
+- `GET /api/0/locations` - Query historical locations
+- `GET /api/0/last` - Get the latest location
+- `GET /api/0/list` - List users and devices
+- `GET /api/0/version` - Get version information
 
-## 客户端配置
+## Client Configuration
 
-1. 下载并安装 [OwnTracks](https://owntracks.org/) 客户端
-2. 配置连接信息：
-   - Mode: HTTP
-   - URL: 你的 Worker URL
-   - Authentication: Basic
-   - Username: 设置的用户名
-   - Password: 设置的密码
+1. Download and install the [OwnTracks](https://owntracks.org/) client
+2. Configure connection information:
+	- Mode: HTTP
+	- URL: Your Worker URL
+	- Authentication: Basic
+	- Username: The username you set
+	- Password: The password you set
 
-## 成本优势
+## Cost Advantages
 
-- Cloudflare Workers: 每天免费 100,000 请求
-- R2 存储：每月前 10GB 免费
-- KV 存储：免费额度足够一般使用
+- Cloudflare Workers: 100,000 requests free per day
+- R2 Storage: First 10GB free per month
+- KV Storage: Free tier sufficient for general use
 
-## 贡献
+## Contribution
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 致谢
+## Acknowledgements
 
-感谢 [OwnTracks](https://owntracks.org/) 项目。
+Thanks to the [OwnTracks](https://owntracks.org/) project.
