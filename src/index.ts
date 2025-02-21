@@ -75,7 +75,6 @@ app.post('/', async (c) => {
 
 		const month = timestamp.substring(0, 7); // YYYY-MM
 		const storagePath = `rec/${username}/${device}/${month}.rec`;
-		console.log(storagePath);
 
 		// Format record line
 		const newRecord = `${timestamp} * ${JSON.stringify(payload)}\n`;
@@ -89,7 +88,6 @@ app.post('/', async (c) => {
 
 		// Append new record
 		content += newRecord;
-		console.log(content);
 
 		// Store updated content
 		await c.env.STORAGE.put(storagePath, content, {
